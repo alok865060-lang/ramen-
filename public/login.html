@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAMEN AI — Login</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:Arial,sans-serif;
+  background:#0b0b0f;
+  color:white;
+  padding:20px;
+}
+
+.box{
+  width:100%;
+  max-width:400px;
+  background:#15151d;
+  border:1px solid #292933;
+  border-radius:20px;
+  padding:28px;
+}
+
+.logo{
+  text-align:center;
+  font-size:30px;
+  font-weight:bold;
+  margin-bottom:5px;
+}
+
+.subtitle{
+  text-align:center;
+  color:#999;
+  margin-bottom:25px;
+}
+
+.tabs{
+  display:flex;
+  margin-bottom:20px;
+  background:#0d0d12;
+  border-radius:12px;
+  padding:4px;
+}
+
+.tabs button{
+  flex:1;
+  border:0;
+  padding:12px;
+  border-radius:9px;
+  background:transparent;
+  color:#aaa;
+  font-size:15px;
+}
+
+.tabs button.active{
+  background:#2563eb;
+  color:white;
+}
+
+.form{
+  display:none;
+}
+
+.form.active{
+  display:block;
+}
+
+label{
+  display:block;
+  margin:12px 0 6px;
+  color:#ccc;
+  font-size:14px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border:1px solid #333;
+  border-radius:11px;
+  background:#0d0d12;
+  color:white;
+  font-size:16px;
+  outline:none;
+}
+
+.main-btn{
+  width:100%;
+  margin-top:20px;
+  padding:14px;
+  border:0;
+  border-radius:11px;
+  background:#2563eb;
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+}
+
+#message{
+  margin-top:15px;
+  text-align:center;
+  min-height:20px;
+  font-size:14px;
+}
+
+.back{
+  display:block;
+  text-align:center;
+  margin-top:20px;
+  color:#888;
+  text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <div class="logo">🤖 RAMEN AI</div>
+  <div class="subtitle">Your Real AI Assistant</div>
+
+  <div class="tabs">
+    <button id="loginTab" class="active" onclick="showLogin()">
+      Login
+    </button>
+
+    <button id="signupTab" onclick="showSignup()">
+      Signup
+    </button>
+  </div>
+
+  <!-- LOGIN -->
+
+  <div id="loginForm" class="form active">
+
+    <label>Email</label>
+    <input
+      id="loginEmail"
+      type="email"
+      placeholder="your@email.com"
+    >
+
+    <label>Password</label>
+    <input
+      id="loginPassword"
+      type="password"
+      placeholder="Password"
+    >
+
+    <button class="main-btn" onclick="login()">
+      Login
+    </button>
+
+  </div>
+
+  <!-- SIGNUP -->
+
+  <div id="signupForm" class="form">
+
+    <label>Name</label>
+    <input
+      id="signupName"
+      type="text"
+      placeholder="Your name"
+    >
+
+    <label>Email</label>
+    <input
+      id="signupEmail"
+      type="email"
+      placeholder="your@email.com"
+    >
+
+    <label>Password</label>
+    <input
+      id="signupPassword"
+      type="password"
+      placeholder="Minimum 6 characters"
+    >
+
+    <button class="main-btn" onclick="signup()">
+      Create Account
+    </button>
+
+  </div>
+
+  <div id="message"></div>
+
+  <a class="back" href="/">← Back to RAMEN AI</a>
+
+</div>
+
+<script>
+
+function showLogin(){
+
+  document.getElementById("loginForm")
+    .classList.add("active");
+
+  document.getElementById("signupForm")
+    .classList.remove("active");
+
+  document.getElementById("loginTab")
+    .classList.add("active");
+
+  document.getElementById("signupTab")
+    .classList.remove("active");
+
+  clearMessage();
+}
+
+function showSignup(){
+
+  document.getElementById("signupForm")
+    .classList.add("active");
+
+  document.getElementById("loginForm")
+    .classList.remove("active");
+
+  document.getElementById("signupTab")
+    .classList.add("active");
+
+  document.getElementById("loginTab")
+    .classList.remove("active");
+
+  clearMessage();
+}
+
+function showMessage(text){
+
+  document.getElementById("message")
+    .textContent = text;
+
+}
+
+function clearMessage(){
+
+  document.getElementById("message")
+    .textContent = "";
+
+}
+
+async function signup(){
+
+  const name =
+    document.getElementById("signupName").value.trim();
+
+  const email =
+    document.getElementById("signupEmail").value.trim();
+
+  const password =
+    document.getElementById("signupPassword").value;
+
+  if(!name || !email || !password){
+
+    showMessage("⚠️ Sabhi fields bharo.");
+
+    return;
+  }
+
+  showMessage("Account create ho raha hai...");
+
+  try{
+
+    const response =
+      await fetch("/api/signup",{
+
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+          name,
+          email,
+          password
+        })
+
+      });
+
+    const data =
+      await response.json();
+
+    if(data.success){
+
+      showMessage("✅ Signup successful!");
+
+      setTimeout(()=>{
+        window.location.href="/";
+      },1000);
+
+    }else{
+
+      showMessage("❌ " + data.error);
+    }
+
+  }catch(error){
+
+    showMessage("❌ Server connection failed.");
+  }
+}
+
+async function login(){
+
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  if(!email || !password){
+
+    showMessage("⚠️ Email aur password bharo.");
+
+    return;
+  }
+
+  showMessage("Login ho raha hai...");
+
+  try{
+
+    const response =
+      await fetch("/api/login",{
+
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+          email,
+          password
+        })
+
+      });
+
+    const data =
+      await response.json();
+
+    if(data.success){
+
+      showMessage("✅ Login successful!");
+
+      setTimeout(()=>{
+        window.location.href="/";
+      },700);
+
+    }else{
+
+      showMessage("❌ " + data.error);
+    }
+
+  }catch(error){
+
+    showMessage("❌ Server connection failed.");
+  }
+}
+
+</script>
+
+</body>
+</html>

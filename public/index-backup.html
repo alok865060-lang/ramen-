@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAMEN AI</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#0b0b0f;
+  color:white;
+}
+
+header{
+  padding:16px;
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  border-bottom:1px solid #292933;
+}
+
+#userInfo{
+  text-align:center;
+  padding:8px;
+  color:#aaa;
+  font-size:14px;
+}
+
+#chat{
+  height:calc(100vh - 150px);
+  overflow-y:auto;
+  padding:15px;
+}
+
+.msg{
+  max-width:85%;
+  padding:12px 15px;
+  margin:10px 0;
+  border-radius:15px;
+  white-space:pre-wrap;
+  line-height:1.5;
+}
+
+.user{
+  margin-left:auto;
+  background:#2563eb;
+}
+
+.ai{
+  margin-right:auto;
+  background:#202027;
+}
+
+.bottom{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  display:flex;
+  gap:8px;
+  padding:10px;
+  background:#111116;
+  border-top:1px solid #292933;
+}
+
+input{
+  flex:1;
+  padding:13px;
+  border:none;
+  border-radius:12px;
+  outline:none;
+  background:#24242c;
+  color:white;
+}
+
+button{
+  border:none;
+  border-radius:12px;
+  padding:0 15px;
+  background:#2563eb;
+  color:white;
+  font-size:16px;
+}
+
+#clear{
+  background:#dc2626;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>🤖 RAMEN AI</header>
+
+<div id="userInfo">Checking login...</div>
+
+<div id="chat"></div>
+
+<div class="bottom">
+  <button onclick="startVoice()">🎤</button>
+
+  <input
+    id="message"
+    placeholder="RAMEN AI se kuch pucho..."
+    onkeydown="if(event.key==='Enter') sendMessage()"
+  >
+
+  <button onclick="sendMessage()">➤</button>
+
+  <button id="clear" onclick="clearHistory()">🗑️</button>
+</div>
+
+<script>
+
+let history = [];
+let currentUser = null;
+
+// ===============================
+// CHECK LOGIN
+// ===============================
+
+async function checkLogin(){
+
+  try{
+
+    const res = await fetch("/api/me");
+    const data = await res.json();
+
+    if(!data.loggedIn){
+
+      document.getElementById("userInfo").innerHTML =
+        "⚠️ Please login first";
+
+      return;
+    }
+
+    currentUser = data.user;
+
+    document.getElementById("userInfo").innerHTML =
+      "👋 Namaste " + currentUser.name;
+
+    await loadHistory();
+
+  }catch(error){
+
+    console.error(error);
+
+    document.getElementById("userInfo").innerHTML =
+      "❌ Server connection error";
+  }
+}
+
+// ===============================
+// LOAD ACCOUNT HISTORY
+// ===============================
+
+async function loadHistory(){
+
+  try{
+
+    const res = await fetch("/api/history");
+
+    if(!res.ok){
+      return;
+    }
+
+    const data = await res.json();
+
+    history = data.history || [];
+
+    renderHistory();
+
+  }catch(error){
+
+    console.error("History load error:",error);
+  }
+}
+
+// ===============================
+// SHOW HISTORY
+// ===============================
+
+function renderHistory(){
+
+  const chat =
+    document.getElementById("chat");
+
+  chat.innerHTML = "";
+
+  history.forEach(item => {
+
+    addMessage(
+      item.role,
+      item.text,
+      false
+    );
+
+  });
+}
+
+// ===============================
+// ADD MESSAGE
+// ===============================
+
+function addMessage(role,text,save=true){
+
+  const chat =
+    document.getElementById("chat");
+
+  const div =
+    document.createElement("div");
+
+  div.className =
+    "msg " + (role === "user" ? "user" : "ai");
+
+  div.textContent = text;
+
+  chat.appendChild(div);
+
+  chat.scrollTop =
+    chat.scrollHeight;
+
+  if(save){
+
+    history.push({
+      role:role,
+      text:text,
+      time:new Date().toISOString()
+    });
+
+  }
+}
+
+// ===============================
+// SAVE HISTORY
+// ===============================
+
+async function saveHistory(){
+
+  try{
+
+    await fetch("/api/history",{
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body:JSON.stringify({
+        history:history
+      })
+
+    });
+
+  }catch(error){
+
+    console.error(
+      "History save error:",
+      error
+    );
+  }
+}
+
+// ===============================
+// SEND MESSAGE
+// ===============================
+
+async function sendMessage(){
+
+  const input =
+    document.getElementById("message");
+
+  const message =
+    input.value.trim();
+
+  if(!message) return;
+
+  if(!currentUser){
+
+    alert("Pehle login karo");
+
+    return;
+  }
+
+  input.value = "";
+
+  addMessage(
+    "user",
+    message
+  );
+
+  await saveHistory();
+
+  addMessage(
+    "ai",
+    "⏳ RAMEN AI soch raha hai..."
+  );
+
+  try{
+
+    const res =
+      await fetch("/api/chat",{
+
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+          message:message
+        })
+
+      });
+
+    const data =
+      await res.json();
+
+    // Remove loading message
+    const chat =
+      document.getElementById("chat");
+
+    const last =
+      chat.lastElementChild;
+
+    if(last &&
+       last.textContent.includes("RAMEN AI soch raha hai")){
+
+      last.remove();
+
+    }
+
+    if(data.success){
+
+      addMessage(
+        "ai",
+        data.reply
+      );
+
+      await saveHistory();
+
+    }else{
+
+      addMessage(
+        "ai",
+        "❌ " + (data.error || "AI error")
+      );
+
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    const chat =
+      document.getElementById("chat");
+
+    const last =
+      chat.lastElementChild;
+
+    if(last) last.remove();
+
+    addMessage(
+      "ai",
+      "❌ Server se connection nahi ho raha."
+    );
+  }
+}
+
+// ===============================
+// CLEAR HISTORY
+// ===============================
+
+async function clearHistory(){
+
+  if(!currentUser) return;
+
+  if(!confirm(
+    "Kya aap puri chat history delete karna chahte ho?"
+  )){
+    return;
+  }
+
+  try{
+
+    const res =
+      await fetch("/api/history",{
+        method:"DELETE"
+      });
+
+    const data =
+      await res.json();
+
+    if(data.success){
+
+      history = [];
+
+      document.getElementById("chat").innerHTML = "";
+
+    }
+
+  }catch(error){
+
+    alert("History delete nahi hui");
+  }
+}
+
+// ===============================
+// VOICE INPUT
+// ===============================
+
+function startVoice(){
+
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if(!SpeechRecognition){
+
+    alert(
+      "Aapke browser me voice input supported nahi hai."
+    );
+
+    return;
+  }
+
+  const recognition =
+    new SpeechRecognition();
+
+  recognition.lang = "hi-IN";
+
+  recognition.start();
+
+  recognition.onresult =
+    function(event){
+
+      const text =
+        event.results[0][0].transcript;
+
+      document.getElementById("message").value =
+        text;
+
+    };
+}
+
+// ===============================
+// START
+// ===============================
+
+checkLogin();
+
+</script>
+
+</body>
+</html>
