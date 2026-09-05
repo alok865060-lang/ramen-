@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAMEN AI — Your AI Assistant</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#0b0b0f;
+  color:#fff;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* TOP BAR */
+.topbar{
+  height:64px;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  z-index:1000;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  padding:0 18px;
+
+  background:rgba(11,11,15,.92);
+  border-bottom:1px solid #292932;
+  backdrop-filter:blur(15px);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo{
+  width:40px;
+  height:40px;
+  border-radius:12px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-weight:bold;
+  font-size:21px;
+
+  background:linear-gradient(135deg,#9b5cff,#633cff);
+  box-shadow:0 0 25px #7b4cff55;
+}
+
+.brand-text strong{
+  display:block;
+  font-size:15px;
+}
+
+.brand-text small{
+  color:#777783;
+  font-size:11px;
+}
+
+.online{
+  display:inline-block;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#39d98a;
+  margin-right:4px;
+}
+
+.new-chat{
+  border:1px solid #30303a;
+  background:#18181f;
+  color:#ddd;
+  padding:9px 13px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* CHAT */
+#chat{
+  position:fixed;
+  top:64px;
+  bottom:120px;
+  left:0;
+  right:0;
+
+  overflow-y:auto;
+  padding:30px 15px 40px;
+}
+
+#chat::-webkit-scrollbar{
+  width:6px;
+}
+
+#chat::-webkit-scrollbar-thumb{
+  background:#30303a;
+  border-radius:10px;
+}
+
+/* WELCOME */
+.welcome{
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.welcome-logo{
+  width:70px;
+  height:70px;
+  border-radius:22px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:34px;
+  font-weight:bold;
+
+  background:linear-gradient(135deg,#9b5cff,#633cff);
+  box-shadow:0 0 45px #7b4cff55;
+
+  margin-bottom:20px;
+}
+
+.welcome h1{
+  font-size:30px;
+  margin-bottom:10px;
+}
+
+.welcome p{
+  color:#858591;
+}
+
+.suggestions{
+  width:min(650px,100%);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:25px;
+}
+
+.suggestions button{
+  padding:15px;
+  text-align:left;
+
+  color:#ddd;
+  background:#15151b;
+
+  border:1px solid #292933;
+  border-radius:14px;
+
+  cursor:pointer;
+}
+
+.suggestions button:hover{
+  border-color:#7448c9;
+  background:#1c1c24;
+}
+
+/* MESSAGES */
+.message{
+  width:min(800px,100%);
+  margin:0 auto 25px;
+
+  display:flex;
+  gap:12px;
+
+  line-height:1.6;
+}
+
+.message strong{
+  width:42px;
+  height:42px;
+  flex-shrink:0;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:12px;
+  background:#202027;
+
+  font-size:11px;
+}
+
+.message p{
+  margin-top:7px;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+/* BOTTOM INPUT */
+.input-area{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+
+  padding:12px 15px 14px;
+
+  background:linear-gradient(
+    to top,
+    #0b0b0f 70%,
+    rgba(11,11,15,.75)
+  );
+
+  z-index:999;
+}
+
+.typing-box{
+  width:min(800px,100%);
+  min-height:58px;
+
+  margin:auto;
+
+  display:flex;
+  align-items:center;
+  gap:7px;
+
+  padding:7px 9px;
+
+  background:#17171e;
+  border:1px solid #343440;
+  border-radius:20px;
+
+  box-shadow:0 8px 35px #0008;
+}
+
+.typing-box:focus-within{
+  border-color:#7548ce;
+  box-shadow:0 0 0 2px #7548ce22;
+}
+
+#messageInput{
+  flex:1;
+  min-width:0;
+
+  background:transparent;
+  border:0;
+  outline:0;
+
+  color:white;
+  font-size:16px;
+  padding:12px 5px;
+}
+
+#messageInput::placeholder{
+  color:#777783;
+}
+
+.icon-btn,
+.send-btn{
+  width:43px;
+  height:43px;
+  flex-shrink:0;
+
+  border:0;
+  border-radius:13px;
+
+  cursor:pointer;
+}
+
+.icon-btn{
+  background:transparent;
+  color:white;
+  font-size:18px;
+}
+
+.icon-btn:hover{
+  background:#25252d;
+}
+
+.send-btn{
+  background:#8b5cf6;
+  color:white;
+
+  font-size:23px;
+  font-weight:bold;
+}
+
+.send-btn:hover{
+  background:#7445d8;
+}
+
+.note{
+  width:min(800px,100%);
+  margin:6px auto 0;
+
+  text-align:center;
+  color:#62626d;
+  font-size:10px;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+
+  .topbar{
+    padding:0 11px;
+  }
+
+  .new-chat{
+    font-size:11px;
+    padding:8px 10px;
+  }
+
+  .welcome h1{
+    font-size:24px;
+  }
+
+  .suggestions{
+    grid-template-columns:1fr;
+  }
+
+  #chat{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .typing-box{
+    border-radius:18px;
+  }
+
+  .input-area{
+    padding-left:9px;
+    padding-right:9px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="brand">
+
+    <div class="logo">R</div>
+
+    <div class="brand-text">
+      <strong>RAMEN AI</strong>
+      <small>
+        <span class="online"></span>
+        Online
+      </small>
+    </div>
+
+  </div>
+
+  <button class="new-chat" onclick="location.reload()">
+    ＋ New chat
+  </button>
+
+</header>
+
+
+<main id="chat">
+
+  <div id="welcome" class="welcome">
+
+    <div class="welcome-logo">R</div>
+
+    <h1>How can I help you?</h1>
+
+    <p>Ask RAMEN AI anything.</p>
+
+    <div class="suggestions">
+
+      <button onclick="suggest('Tell me an interesting fact')">
+        💡 Interesting fact
+      </button>
+
+      <button onclick="suggest('Write a story for me')">
+        ✍️ Write a story
+      </button>
+
+      <button onclick="suggest('Help me with coding')">
+        💻 Help with coding
+      </button>
+
+      <button onclick="suggest('Give me a creative idea')">
+        ✨ Creative idea
+      </button>
+
+    </div>
+
+  </div>
+
+</main>
+
+
+<!-- BOTTOM CHAT INPUT -->
+<div class="input-area">
+
+  <div class="typing-box">
+
+    <button id="micBtn" class="icon-btn" type="button">
+      🎤
+    </button>
+
+    <input
+      id="messageInput"
+      type="text"
+      placeholder="Message RAMEN AI..."
+      autocomplete="off"
+    >
+
+    <button id="sendBtn" class="send-btn" type="button">
+      ↑
+    </button>
+
+  </div>
+
+  <div class="note">
+    RAMEN AI can make mistakes. Check important information.
+  </div>
+
+</div>
+
+
+<script src="script.js"></script>
+
+<script>
+function suggest(text){
+
+  const input=document.getElementById("messageInput");
+
+  input.value=text;
+  input.focus();
+
+}
+</script>
+
+</body>
+</html>
